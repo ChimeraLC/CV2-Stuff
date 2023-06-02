@@ -20,7 +20,11 @@ def DotProduct(vector1, vector2):
 	for i in range(len(vector1)):
 		total += vector1[i] * vector2[i]
 	return total
-
+def Magnitude(vector):
+	total = 0
+	for i in range(len(vector)):
+		total += vector[i]**2
+	return total ** (1/(len(vector)))
 while True:
 	# Read each frame from the webcam
 	_, frame = cap.read()
@@ -46,34 +50,22 @@ while True:
 				lmx = int(lm.x * 640)
 				lmy = int(lm.y * 480)
 				landmarks.append([lmx, lmy])
-			
-				
-		
-		# highlight stuff
-		if (raised):
-			for i in range(5, 9):
-				cv2.circle(frame, landmarks[i], 2,
-					    (50,152,152), 2)
-
 		# Drawing landmarks on frames
-		mpDraw.draw_landmarks(frame, handslms, 
-		    mpHands.HAND_CONNECTIONS)
-		
-		for i in range(5, 6):
-			term1 = handslms.landmark[i]
-			term2 = handslms.landmark[i+1]
-			term3 = handslms.landmark[i+2]
-			cv2.circle(frame, (int(term1.x * 640), int(term1.y * 480)), 2,
-					(50,152,152), 2)
-			cv2.putText(frame,
-	          "[" + str(int(100 * (term1.x-term2.x))) + " , " + str(int(100*(term1.y - term2.y))) + 
-			  " , " + str(int(100*(term1.z - term2.z))) + "]", (10, 50), cv2.FONT_HERSHEY_SIMPLEX, 
-                   1, (0,0,255), 2, cv2.LINE_AA)
+		mpDraw.draw_landmarks(frame, handslms, mpHands.HAND_CONNECTIONS)
 
-		
+		base = landmarks[0]
+		pointer = landmarks[5]
+		pinky = landmarks[17]
 
-		
-		
+		cv2.circle(frame, base, 2, (50,152,152), 2)
+		cv2.circle(frame, pointer, 2, (50, 152, 152), 2)
+		cv2.circle(frame, pinky, 2, (50, 152, 152), 2)
+		cv2.putText(frame, str(Magnitude([base[0] - pointer[0], base[1]-pointer[1]])), (10, 50), cv2.FONT_HERSHEY_SIMPLEX, 
+					1, (0,0,255), 2, cv2.LINE_AA)
+		cv2.putText(frame, str(Magnitude([base[0] - pinky[0], base[1]-pinky[1]])), (10, 70), cv2.FONT_HERSHEY_SIMPLEX, 
+					1, (0,0,255), 2, cv2.LINE_AA)
+		cv2.putText(frame, str(Magnitude([pinky[0] - pointer[0], pinky[1]-pointer[1]])), (10, 90), cv2.FONT_HERSHEY_SIMPLEX, 
+					1, (0,0,255), 2, cv2.LINE_AA)
 
 	# Show the final output
 	cv2.imshow("Output", frame) 
