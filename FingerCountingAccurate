@@ -1,4 +1,4 @@
-# Counts the number of raised fingers by only analyzing 2D direction
+# Counts the number of raised fingers also making use of the third dimension
 
 import cv2
 import numpy as np
@@ -16,7 +16,10 @@ cap = cv2.VideoCapture(0)
 
 #helper functions
 def DotProduct(vector1, vector2):
-	return vector1[0] * vector2[0] + vector1[1] * vector2[1]
+	total = 0
+	for i in range(len(vector1)):
+		total += vector1[i] * vector2[i]
+	return total
 
 while True:
 	# Read each frame from the webcam
@@ -36,43 +39,41 @@ while True:
 	# post process the result
 	if result.multi_hand_landmarks:
 		landmarks = []
+		raised = True
 		for handslms in result.multi_hand_landmarks:
 			for lm in handslms.landmark:
 				# print(id, lm)
 				lmx = int(lm.x * 640)
 				lmy = int(lm.y * 480)
 				landmarks.append([lmx, lmy])
+			
 				
-				#cv2.circle(frame, (lmx, lmy), 1, (50, 152, 152), 2);
+		
+		# highlight stuff
+		if (raised):
+			for i in range(5, 9):
+				cv2.circle(frame, landmarks[i], 2,
+					    (50,152,152), 2)
 
 		# Drawing landmarks on frames
 		mpDraw.draw_landmarks(frame, handslms, 
 		    mpHands.HAND_CONNECTIONS)
-
-		# Detecting direction hand is pointing
-		base = landmarks[0]
-		top = [int(landmarks[5][0]/2 + landmarks[17][0]/2),
-	 	    int(landmarks[5][1]/2 + landmarks[17][1]/2)]
-		cv2.line(frame, base, top,  (0,0,0), 3)
-
-		# Checking finger directions
-		raised = 0
-		baseVector = [top[0] - base[0], top[1] - base[1]]
-		for i in range(8, 21, 4):
-			extended = True
-			for j in range(0, 3):
-				currentVector = [landmarks[i-j][0] - landmarks[i-j-1][0], 
-		     		    landmarks[i-j][1] - landmarks[i-j-1][1]]
-				if (DotProduct(currentVector, baseVector) < 0):
-					extended = False
-			if (extended):
-				for j in range(0, 4):
-					cv2.circle(frame, landmarks[i-j], 2,
-					    (50,152,152), 2)
-				raised += 1
 		
-		cv2.putText(frame, str(raised), (10, 50), cv2.FONT_HERSHEY_SIMPLEX, 
+		for i in range(5, 6):
+			term1 = handslms.landmark[i]
+			term2 = handslms.landmark[i+1]
+			term3 = handslms.landmark[i+2]
+			cv2.circle(frame, (int(term1.x * 640), int(term1.y * 480)), 2,
+					(50,152,152), 2)
+			cv2.putText(frame,
+	          "[" + str(int(100 * (term1.x-term2.x))) + " , " + str(int(100*(term1.y - term2.y))) + 
+			  " , " + str(int(100*(term1.z - term2.z))) + "]", (10, 50), cv2.FONT_HERSHEY_SIMPLEX, 
                    1, (0,0,255), 2, cv2.LINE_AA)
+
+		
+
+		
+		
 
 	# Show the final output
 	cv2.imshow("Output", frame) 
