@@ -1,0 +1,88 @@
+import cv2
+import numpy as np
+
+# Initialize the webcam
+cap = cv2.VideoCapture(0)
+# Attempts to find the larger tictactoe grid within the image
+#def find_grid(frame):
+	
+
+while True:
+	# Read each frame from the webcam
+	_, frame = cap.read()
+
+	x, y, c = frame.shape
+
+	total_area = x * y
+
+	# Flip the frame vertically
+	frame = cv2.flip(frame, 1)
+	blur = cv2.blur(frame, (3, 3))
+	frame2 = cv2.cvtColor(blur, cv2.COLOR_BGR2GRAY)
+	#framergb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+
+	thresh = cv2.adaptiveThreshold(
+		   frame2, 255, cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY, 91, 5
+	)
+
+
+
+	contours, _ = cv2.findContours(thresh, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+	#cv2.drawContours(frame2, contours, -1, (0,255,0), 3)
+	for c in contours:
+        # Approximate the contour
+		peri = cv2.arcLength(c, True)
+		approx = cv2.approxPolyDP(c, 0.01 * peri, True)
+
+		area = cv2.contourArea(c)
+        # Check for contours that are quadrilateral and also not too small
+		if area / total_area > 0.0001 and len(approx) == 4:
+			cv2.drawContours(frame, [approx], 0, (0, 255, 0), 3)
+
+			flattened = approx.ravel()
+			# Finding counterclockwise orientation
+			grid = [[flattened[0], flattened[1]], 
+		      [flattened[0], flattened[1]],
+	   		  [flattened[0], flattened[1]],
+	  		  [flattened[0], flattened[1]]]
+			# Top left value
+			for i in range(4):
+				if (flattened[2*i] + flattened[2*i+1] < grid[0][0] + grid[0][1]):
+					grid[0][0] = flattened[2*i]
+					grid[0][1] = flattened[2*i+1]
+			# Bottom right value
+			for i in range(4):
+				if (flattened[2*i] + flattened[2*i+1] > grid[2][0] + grid[2][1]):
+					grid[2][0] = flattened[2*i]
+					grid[2][1] = flattened[2*i+1]
+
+			# Bottom Left value
+			for i in range(4):
+				if (flattened[2*i] - flattened[2*i+1] < grid[1][0] - grid[1][1]):
+					grid[1][0] = flattened[2*i]
+					grid[1][1] = flattened[2*i+1]
+
+					
+			# Top right value
+			for i in range(4):
+				if (flattened[2*i] - flattened[2*i+1] > grid[3][0] - grid[3][1]):
+					grid[3][0] = flattened[2*i]
+					grid[3][1] = flattened[2*i+1]
+			
+			cv2.circle(frame, grid[0], 4, (50, 152, 152), 2)
+			cv2.circle(frame, grid[2], 4, (152, 50, 152), 2)
+			cv2.circle(frame, grid[1], 4, (152, 152, 50), 2)
+			cv2.circle(frame, grid[3], 4, (152, 50, 50), 2)
+
+			
+
+	# Show the final output
+	cv2.imshow("Output", frame) 
+
+	if cv2.waitKey(1) == ord('q'):
+		break
+
+# release the webcam and destroy all active windows
+cap.release()
+
+cv2.destroyAllWindows()
