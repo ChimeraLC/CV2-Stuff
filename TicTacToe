@@ -37,7 +37,7 @@ while True:
 		area = cv2.contourArea(c)
         # Check for contours that are quadrilateral and also not too small
 		if area / total_area > 0.0001 and len(approx) == 4:
-			cv2.drawContours(frame, [approx], 0, (0, 255, 0), 3)
+			#cv2.drawContours(frame, [approx], 0, (0, 255, 0), 3)
 
 			flattened = approx.ravel()
 			# Finding counterclockwise orientation
@@ -73,6 +73,30 @@ while True:
 			cv2.circle(frame, grid[2], 4, (152, 50, 152), 2)
 			cv2.circle(frame, grid[1], 4, (152, 152, 50), 2)
 			cv2.circle(frame, grid[3], 4, (152, 50, 50), 2)
+
+			warpGrid = np.array([[10, 10], [10, y-10], [x-10, y-10], [x-10, 10]], dtype="float32")
+			grid = np.array(grid, dtype="float32")
+
+
+			warpMethod = cv2.getPerspectiveTransform(grid, warpGrid)
+			warped = cv2.warpPerspective(thresh, warpMethod, (x+10, y+10))
+
+			# find tic tac toe blocks within square
+			x, y = warped.shape
+			inner_contours, _ = cv2.findContours(warped, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+
+			total = 0
+			for inner_c in inner_contours:
+				peri = cv2.arcLength(c, True)
+				approx = cv2.approxPolyDP(c, 0.01 * peri, True)
+
+				area = cv2.contourArea(inner_c)
+
+				if area / x / y > 0.0001 and area / x / y < 0.5 and len(approx) == 4:
+					total += 1
+			
+			if (total == 9):
+				cv2.imshow("Output2", warped) 
 
 			
 
