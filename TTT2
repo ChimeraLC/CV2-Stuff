@@ -1,34 +1,37 @@
 import cv2
 import numpy as np
 
-def Resize(frame, approx):
+def Resize(frame, approx, color = False):
 	flattened = approx.ravel()
-	x, y = frame.shape
+	if (color):
+		x, y, _ = frame.shape
+	else:
+		x, y = frame.shape
 	# Finding counterclockwise orientation
 	grid = [[flattened[0], flattened[1]], 
 		[flattened[0], flattened[1]],
 		[flattened[0], flattened[1]],
 		[flattened[0], flattened[1]]]
 	# Top left value
-	for i in range(4):
+	for i in range(int(len(flattened)/2)):
 		if (flattened[2*i] + flattened[2*i+1] < grid[0][0] + grid[0][1]):
 			grid[0][0] = flattened[2*i]
 			grid[0][1] = flattened[2*i+1]
 	# Bottom right value
-	for i in range(4):
+	for i in range(int(len(flattened)/2)):
 		if (flattened[2*i] + flattened[2*i+1] > grid[2][0] + grid[2][1]):
 			grid[2][0] = flattened[2*i]
 			grid[2][1] = flattened[2*i+1]
 
 	# Bottom Left value
-	for i in range(4):
+	for i in range(int(len(flattened)/2)):
 		if (flattened[2*i] - flattened[2*i+1] < grid[1][0] - grid[1][1]):
 			grid[1][0] = flattened[2*i]
 			grid[1][1] = flattened[2*i+1]
 
 			
 	# Top right value
-	for i in range(4):
+	for i in range(int(len(flattened)/2)):
 		if (flattened[2*i] - flattened[2*i+1] > grid[3][0] - grid[3][1]):
 			grid[3][0] = flattened[2*i]
 			grid[3][1] = flattened[2*i+1]
@@ -60,7 +63,7 @@ while True:
 	frame2 = cv2.cvtColor(blur, cv2.COLOR_BGR2GRAY)
 	
 	thresh = cv2.adaptiveThreshold(
-		   frame2, 255, cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY, 51, 5
+		   frame2, 255, cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY, 51, 3
 	)
 
 
@@ -77,12 +80,12 @@ while True:
         # Check for contours that are quadrilateral and also not too small
 		if area > maxArea and len(approx) == 4:
 			#cv2.drawContours(frame, [approx], 0, (0, 255, 0), 3)
-
 			warped = Resize(thresh, approx)
+			warpedColor = Resize(frame, approx, True)
 			maxArea = area
 
 	# fixing broken lines
-	kernel = np.ones((5, 5), np.uint8)  # note this is a horizontal kernel
+	kernel = np.ones((3, 3), np.uint8)  # note this is a horizontal kernel
 	d_im = cv2.dilate(warped, kernel, iterations=1)
 	e_im = cv2.erode(d_im, kernel, iterations=1) 
 	warped = e_im
@@ -93,15 +96,32 @@ while True:
 		cv2.drawContours(warped, [i], -1, (0, 0, 0), 10)
 	inner_contours, _ = cv2.findContours(warped, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
 	# Find contours
+
+	x1, y1 = warped.shape
+	outer = x1*y1
+	squares = []
 	for i in inner_contours:
-		area = cv2.contourArea(i)
 		peri = cv2.arcLength(i, True)
-		approx = cv2.approxPolyDP(i, 0.01 * peri, True)
-		cv2.drawContours(warped, [approx], 0, (255, 255, 0), 3)
+		approx = cv2.approxPolyDP(i, 0.02 * peri, True)
+		
+		inner = cv2.contourArea(approx)
+		if (inner/outer > 0.02 and inner/outer < 0.2 and len(approx) < 7):
+			# Making sure is a square
+			_, _, w,h = cv2.boundingRect(approx)
+			if (w/h < 0.5 or h/w < 0.5):
+				continue
+			cv2.drawContours(warped, [approx], 0, (255, 255, 0), 3)
+			cv2.drawContours(warpedColor, [approx], 0, (255, 255, 0), 3)
+			squares.append(Resize(warped, approx))
+
+	if (len(squares) == 9):
+		savedSquares = squares
+		saved = warpedColor
+		found = True
 	
-	cv2.imshow("Output3" ,e_im)
+	cv2.imshow("Output3" ,warped)
 	
-	
+	# TODO: draw the found contours onto the affected file
 			
 	# Show the final output
 	cv2.imshow("Output", thresh) 
@@ -116,7 +136,7 @@ cv2.destroyAllWindows()
 while (True):
 	if (found):
 		cv2.imshow("Output", saved)
-		for i in range(1):
+		for i in range(9):
 			cv2.imshow("Output"+ str(i), savedSquares[i])
 	else:
 		break
