@@ -78,7 +78,7 @@ while True:
 
 		area = cv2.contourArea(c)
         # Check for contours that are quadrilateral and also not too small
-		if area > maxArea and len(approx) == 4:
+		if area > maxArea and area / total_area < 0.9 and len(approx) == 4:
 			#cv2.drawContours(frame, [approx], 0, (0, 255, 0), 3)
 			warped = Resize(thresh, approx)
 			warpedColor = Resize(frame, approx, True)
@@ -138,6 +138,7 @@ while (True):
 		cv2.imshow("Output", saved)
 		for i in range(9):
 			cv2.imshow("Output"+ str(i), savedSquares[i])
+			cv2.imwrite('C:/Users/lucas/OneDrive/Documents/Coding/HandRecognition/GestureRecognition/Images/Output' + str(i) + ".jpg", savedSquares[i])
 	else:
 		break
 	if cv2.waitKey(1) == ord('w'):
