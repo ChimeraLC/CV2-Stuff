@@ -1,5 +1,6 @@
 import cv2
 import numpy as np
+import tensorflow as tf
 
 def Resize(frame, approx, color = False):
 	flattened = approx.ravel()
@@ -47,7 +48,17 @@ def Resize(frame, approx, color = False):
 cap = cv2.VideoCapture(0)
 # Attempts to find the larger tictactoe grid within the image
 #def find_grid(frame):
-	
+
+#Load tensorflow model
+model = tf.keras.Sequential([
+    tf.keras.layers.Flatten(input_shape=(20, 30)),
+    tf.keras.layers.Dense(128, activation='relu'),
+    tf.keras.layers.Dense(10)
+])
+model.load_weights('./Checkpoints/TTT_Checkpoint')
+
+
+
 found = False
 while True:
 	# Read each frame from the webcam
@@ -88,16 +99,16 @@ while True:
 	kernel = np.ones((3, 3), np.uint8)  # note this is a horizontal kernel
 	d_im = cv2.dilate(warped, kernel, iterations=1)
 	e_im = cv2.erode(d_im, kernel, iterations=1) 
-	warped = e_im
+	warped2 = e_im
 	
 	# Thicken lines
-	inner_contours, _ = cv2.findContours(warped, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+	inner_contours, _ = cv2.findContours(warped2, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
 	for i in inner_contours:
-		cv2.drawContours(warped, [i], -1, (0, 0, 0), 10)
-	inner_contours, _ = cv2.findContours(warped, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+		cv2.drawContours(warped2, [i], -1, (0, 0, 0), 10)
+	inner_contours, _ = cv2.findContours(warped2, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
 	# Find contours
 
-	x1, y1 = warped.shape
+	x1, y1 = warped2.shape
 	outer = x1*y1
 	squares = []
 	for i in inner_contours:
@@ -119,7 +130,7 @@ while True:
 		saved = warpedColor
 		found = True
 	
-	cv2.imshow("Output3" ,warped)
+	cv2.imshow("Output3" ,warped2)
 	
 	# TODO: draw the found contours onto the affected file
 			
@@ -138,7 +149,11 @@ while (True):
 		cv2.imshow("Output", saved)
 		for i in range(9):
 			cv2.imshow("Output"+ str(i), savedSquares[i])
-			cv2.imwrite('C:/Users/lucas/OneDrive/Documents/Coding/HandRecognition/GestureRecognition/Images/Output' + str(i) + ".jpg", savedSquares[i])
+			# Alter image
+			res = cv2.resize(savedSquares[i], dsize=(33, 25), interpolation=cv2.INTER_CUBIC)
+			cropped = cv2.getRectSubPix(res, (30, 20), (17, 13))
+#			cv2.imwrite('C:/Users/lucas/OneDrive/Documents/Coding/HandRecognition/GestureRecognition/Images/Output' + str(i) + ".jpg", savedSquares[i])
+			cv2.imwrite('./Images/Output' + str(i+99) + ".jpg", cropped)
 	else:
 		break
 	if cv2.waitKey(1) == ord('w'):

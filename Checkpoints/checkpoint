@@ -1,0 +1,2 @@
+model_checkpoint_path: "TTT_Checkpoint"
+all_model_checkpoint_paths: "TTT_Checkpoint"
