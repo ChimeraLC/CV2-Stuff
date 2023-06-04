@@ -14,16 +14,67 @@ total_labels = np.array([0, 1, 1, 1, 1, 0, 0, 1, 0, 0, 0, 0, 1, 1, 0, 0, 1, 1,
                           1, 1, 0, 0, 1, 0, 1, 0, 1, 1, 0, 1, 0, 1, 0, 1, 0, 1,
                           0, 0, 1, 0, 1, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                           1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                          0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+
+                          0, 1, 1, 1, 1, 0, 0, 1, 0, 0, 0, 0, 1, 1, 0, 0, 1, 1,
+                          1, 0, 1, 1, 0, 0, 0, 1, 1, 1, 1, 1, 0, 1, 0, 1, 0, 1,
+                          1, 1, 0, 0, 1, 0, 1, 0, 1, 1, 0, 1, 0, 1, 0, 1, 0, 1,
+                          0, 0, 1, 0, 1, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                          1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                          0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+
+                          0, 1, 1, 1, 1, 0, 0, 1, 0, 0, 0, 0, 1, 1, 0, 0, 1, 1,
+                          1, 0, 1, 1, 0, 0, 0, 1, 1, 1, 1, 1, 0, 1, 0, 1, 0, 1,
+                          1, 1, 0, 0, 1, 0, 1, 0, 1, 1, 0, 1, 0, 1, 0, 1, 0, 1,
+                          0, 0, 1, 0, 1, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                          1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                          0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+
+                          0, 1, 1, 1, 1, 0, 0, 1, 0, 0, 0, 0, 1, 1, 0, 0, 1, 1,
+                          1, 0, 1, 1, 0, 0, 0, 1, 1, 1, 1, 1, 0, 1, 0, 1, 0, 1,
+                          1, 1, 0, 0, 1, 0, 1, 0, 1, 1, 0, 1, 0, 1, 0, 1, 0, 1,
+                          0, 0, 1, 0, 1, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                          1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                           0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1])
 
 total_count = len(total_labels)
 train_count = int(total_count * 0.8)
 
+# TODO: combine this into a single loop
+
 # load all the images
-for i in range(total_count):
+for i in range(int(len(total_labels)/4)):
     img = cv2.imread("C:/Users/lucas/OneDrive/Documents/Coding/HandRecognition/GestureRecognition/Images/Output"+ str(i) + ".jpg", 0)
     res = cv2.resize(img, dsize=(33, 25), interpolation=cv2.INTER_CUBIC)
     cropped = cv2.getRectSubPix(res, (30, 20), (17, 13))
+    # TODO: crop edges
+    numpydata = asarray(cropped)
+    total_images.append(numpydata)
+# load all the images
+for i in range(int(len(total_labels)/4)):
+    img = cv2.imread("C:/Users/lucas/OneDrive/Documents/Coding/HandRecognition/GestureRecognition/Images/Output"+ str(i) + ".jpg", 0)
+    res = cv2.resize(img, dsize=(33, 25), interpolation=cv2.INTER_CUBIC)
+    cropped = cv2.getRectSubPix(res, (30, 20), (17, 13))
+    cropped = cv2.flip(cropped, 0)
+    # TODO: crop edges
+    numpydata = asarray(cropped)
+    total_images.append(numpydata)
+# load all the images
+for i in range(int(len(total_labels)/4)):
+    img = cv2.imread("C:/Users/lucas/OneDrive/Documents/Coding/HandRecognition/GestureRecognition/Images/Output"+ str(i) + ".jpg", 0)
+    res = cv2.resize(img, dsize=(33, 25), interpolation=cv2.INTER_CUBIC)
+    cropped = cv2.getRectSubPix(res, (30, 20), (17, 13))
+    cropped = cv2.flip(cropped, 1)
+    # TODO: crop edges
+    numpydata = asarray(cropped)
+    total_images.append(numpydata)
+# load all the images
+for i in range(int(len(total_labels)/4)):
+    img = cv2.imread("C:/Users/lucas/OneDrive/Documents/Coding/HandRecognition/GestureRecognition/Images/Output"+ str(i) + ".jpg", 0)
+    res = cv2.resize(img, dsize=(33, 25), interpolation=cv2.INTER_CUBIC)
+    cropped = cv2.getRectSubPix(res, (30, 20), (17, 13))
+    cropped = cv2.flip(cropped, 0)
+    cropped = cv2.flip(cropped, 1)
     # TODO: crop edges
     numpydata = asarray(cropped)
     total_images.append(numpydata)
@@ -56,7 +107,7 @@ model.compile(optimizer='adam',
               loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
               metrics=['accuracy'])
 
-model.fit(train_images, train_labels, epochs=30)
+model.fit(train_images, train_labels, epochs=20)
 
 # Save model
 model.save_weights('./Checkpoints/TTT_Checkpoint')
