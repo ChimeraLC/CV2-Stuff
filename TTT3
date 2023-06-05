@@ -1,5 +1,6 @@
 import cv2
 import numpy as np
+import copy
 import tensorflow as tf
 from TTTSolver import *
 
@@ -56,8 +57,8 @@ def TopLeft(approx):
 	return ret
 
 
+savedPosition = -1
 
-	
 # Initialize the webcam
 cap = cv2.VideoCapture(0)
 # Attempts to find the larger tictactoe grid within the image
@@ -98,6 +99,7 @@ while True:
 
 	contours, _ = cv2.findContours(thresh, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
 	maxArea = 0
+
 	#cv2.drawContours(frame2, contours, -1, (0,255,0), 3)
 	for c in contours:
         # Approximate the contour
@@ -147,24 +149,32 @@ while True:
 
 	if (len(squares) == 9):
 		savedSquares = squares
-		savedOriginals = originals
+		savedOriginals = copy.deepcopy(originals)
+		savedOriginals2 = copy.deepcopy(originals)
 		saved = warpedColor
 		found = True
-		for i in range(9):
-			
-			# First, sort squares to get the right oder
-			savedOriginals[i] = TopLeft(savedOriginals[i])
+		shrunk = False
+
+	if found:
+		if shrunk == False:
+			for i in range(9):
+				# First, sort squares to get the right oder
+				savedOriginals[i] = TopLeft(savedOriginals[i])
+				shrunk = True
 
 		# sorting by rows
-		sort = sorted(zip(savedOriginals, savedSquares), key=lambda x: x[0][1])
-		savedOriginals = [x for x, _ in sort]
-		savedSquares = [x for _, x in sort]
+		sort = sorted(zip(savedOriginals, savedSquares, savedOriginals2), key=lambda x: x[0][1])
+		savedOriginals = [x for x, _, _ in sort]
+		savedOriginals2 = [x for _, _, x in sort]
+		savedSquares = [x for _, x, _ in sort]
 
 		# sort the columns
 		for i in range(3):
-			sort = sorted(zip(savedOriginals[i*3:i*3+3], savedSquares[i*3:i*3+3]), key=lambda x: x[0][0])
-			savedOriginals[i*3:i*3+3] = [x for x, _ in sort]
-			savedSquares[i*3:i*3+3] = [x for _, x in sort]
+			sort = sorted(zip(savedOriginals[i*3:i*3+3], savedSquares[i*3:i*3+3],
+		     savedOriginals2[i*3:i*3+3]), key=lambda x: x[0][0])
+			savedOriginals[i*3:i*3+3] = [x for x, _ ,_ in sort]
+			savedOriginals2[i*3:i*3+3] = [x for _, _ ,x in sort]
+			savedSquares[i*3:i*3+3] = [x for _, x, _ in sort]
 
 		# Shrink images for use with model				
 		alteredSquares = []
@@ -180,10 +190,22 @@ while True:
 		for i in range(9):
 			if (np.mean(alteredSquares[i]) > 250):
 				predictions[i] = 2
-		cv2.putText(thresh,
-			str(Solve(predictions)), (10, 50), cv2.FONT_HERSHEY_SIMPLEX, 
-				1, (0,0,255), 2, cv2.LINE_AA)
-			
+
+		position = Solve(predictions)
+		if (position != -1):
+			savedPosition = position
+
+		# Drawing prediction
+		if savedPosition != -1:
+			currentContour = savedOriginals2[savedPosition]
+			M = cv2.moments(currentContour)
+			if M['m00'] != 0:
+				cx = int(M['m10']/M['m00'])
+				cy = int(M['m01']/M['m00'])
+				cv2.putText(warped2, str(savedPosition), (cx - 20, cy - 20),
+						cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), 2)
+	
+		cv2.imshow("Output3" ,warped2)
 	
 	# TODO: draw the found contours onto the affected file
 			
