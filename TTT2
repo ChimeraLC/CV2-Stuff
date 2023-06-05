@@ -1,6 +1,7 @@
 import cv2
 import numpy as np
 import tensorflow as tf
+from TTTSolver import *
 
 def Resize(frame, approx, color = False):
 	flattened = approx.ravel()
@@ -53,6 +54,9 @@ def TopLeft(approx):
 			ret[0] = flattened[2*i]
 			ret[1] = flattened[2*i+1]
 	return ret
+
+
+
 	
 # Initialize the webcam
 cap = cv2.VideoCapture(0)
@@ -191,4 +195,24 @@ if (found):
 		if cv2.waitKey(1) == ord('w'):
 			break
 
-	print(model.predict(np.array(alteredSquares)))
+	# Reading grid
+	predictions = model.predict(np.array(alteredSquares), verbose=0)
+	predictions = [np.argmax(x) for x in predictions]
+	# Checking for any white squares
+	for i in range(9):
+		if (np.mean(alteredSquares[i]) > 250):
+			predictions[i] = 2
+	
+	print(predictions)
+
+	grid = [[], [], []]
+	for i in range(3):
+		for j in range(3):
+			if predictions[i*3 + j] == 0:
+				grid[i].append("o")
+			elif predictions[i*3 + j] == 1:
+				grid[i].append("x")
+			else:
+				grid[i].append(" ")
+	print(grid)
+	print(Solve(predictions))
