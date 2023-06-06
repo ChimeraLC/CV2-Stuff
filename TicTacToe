@@ -47,9 +47,9 @@ color indicates if the frame is colored or not
 def Resize(frame, approx, color = False):
 	# Get frame shape
 	if (color):
-		x, y, _ = frame.shape
+		y, x, _ = frame.shape
 	else:
-		x, y = frame.shape
+		y, x = frame.shape
 
 	# Get corresponding points
 	warpGrid = np.array([[10, 10], [10, y-10], [x-10, y-10], [x-10, 10]], dtype="float32")
@@ -95,7 +95,7 @@ while True:
 	# Read each frame from the webcam
 	_, frame = cap.read()
 
-	x, y, c = frame.shape
+	y, x, c = frame.shape
 
 	total_area = x * y
 
@@ -122,12 +122,13 @@ while True:
 		area = cv2.contourArea(c)
         # Check for contours that are quadrilateral and also not too small
 		if area > maxArea and area / total_area < 0.9 and len(approx) == 4:
-			# Map the shape onto a rectangle
-			warped = Resize(thresh, approx)
-			warpedColor = Resize(frame, approx, True)
 			maxArea = area
 			# Save the contour elements
 			originalContour = approx
+
+	# Map the shape onto a rectangle
+	warped = Resize(thresh, originalContour)
+	warpedColor = Resize(frame, originalContour, True)
 
 	# fixing broken lines and thicken shapes
 	kernel = np.ones((3, 3), np.uint8) 
@@ -155,7 +156,7 @@ while True:
 		if (innerArea/outerArea > 0.02 and innerArea/outerArea < 0.2 and len(approx) < 7):
 			# Confirming its somewhat square shaped
 			_, _, w,h = cv2.boundingRect(approx)
-			if (w/h < 0.5 or h/w < 0.5):
+			if (w/h < 0.5 or h/w < 0.5 or w * h / x1 / y1 > 0.5):
 				continue
 			cv2.drawContours(warped, [approx], 0, (255, 255, 0), 3)
 			cv2.drawContours(warpedColor, [approx], 0, (255, 255, 0), 3)
@@ -173,6 +174,10 @@ while True:
 			originalPoints.append(TopLeft(originals[i]))
 		savedOriginalContour = originalContour
 		saved = warpedColor
+
+		# Calculate how large the image is and compensate
+		
+		imageRatio = maxArea / 10000
 
 		# Sort the elements to be top left to bottom right
 		
@@ -219,25 +224,32 @@ while True:
 	if found:
 		# Find center of corresponding square
 		currentContour = savedOriginals[savedPosition]
-		M = cv2.moments(currentContour)
-		if M['m00'] != 0:
-			cx = int(M['m10']/M['m00'])
-			cy = int(M['m01']/M['m00'])
-			
+		flattened = FlattenSort(currentContour)
+		cx = 0
+		cy = 0
+		for i in range(len(flattened)):
+			cx += flattened[i][0]
+			cy += flattened[i][1]
+
+		cx = int(cx / len(flattened))
+		cy = int(cy / len(flattened))
 			# Map positions onto the original image
-			mapGrid = FlattenSort(savedOriginalContour)
-			x, y = warped2.shape
-			warpGrid = np.array([[0, 0], [0, y], [x, y], [x, 0]], dtype="float32")
+		mapGrid = FlattenSort(savedOriginalContour)
+		y, x = warped2.shape
+		warpGrid = np.array([[0, 0], [0, y], [x, y], [x, 0]], dtype="float32")
 
-			h, mask = cv2.findHomography(warpGrid, mapGrid)
-			pts = np.array([cx, cy], np.float32)
-			pts1 = pts.reshape(-1,1,2).astype(np.float32)
-			dst1 = cv2.perspectiveTransform(pts1, h)
+		h, mask = cv2.findHomography(warpGrid, mapGrid)
+		pts = np.array([cx, cy], np.float32)
+		pts1 = pts.reshape(-1,1,2).astype(np.float32)
+		dst1 = cv2.perspectiveTransform(pts1, h)
 
-			# Draw text onto image
-			cv2.putText(frame, (["o", "x"])[player], (int(dst1[0][0][0]), int(dst1[0][0][1])),
-					cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 0), 2)
-	
+		# Draw text onto image
+		cv2.putText(frame, (["o", "x"])[player], 
+	      (int(dst1[0][0][0]) - int(10 * imageRatio),
+		  int(dst1[0][0][1]) + int(10 * imageRatio)),
+		  cv2.FONT_HERSHEY_SIMPLEX, 1 * imageRatio, (0, 0, 0), 
+		  max(2, int(2 * imageRatio)))
+		
 	# Show final output
 	cv2.imshow("Output", frame) 
 	if cv2.waitKey(1) == ord('q'):
