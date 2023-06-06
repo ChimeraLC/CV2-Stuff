@@ -1,3 +1,6 @@
+"""
+Very basic image recognition to distinguish between O's and X's
+"""
 # TensorFlow and tf.keras
 import tensorflow as tf
 
