@@ -73,6 +73,9 @@ def TopLeft(approx):
 			ret[1] = flattened[2*i+1]
 	return ret
 
+"""
+Beginning of main program
+"""
 #Load tensorflow model
 model = tf.keras.Sequential([
     tf.keras.layers.Flatten(input_shape=(20, 30)),
