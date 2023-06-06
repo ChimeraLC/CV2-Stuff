@@ -17,7 +17,6 @@ def Solve(grid):
 	elif difcount == 1:
 		player = 0
 	else:
-		print("Unviable board")
 		return -1, 0
 	
 	# calculating all the positions
@@ -47,7 +46,7 @@ def Solve(grid):
 		gridcopy[pos] = player
 		if FindMatches(gridcopy, [player, player, 2]) >= 2:
 			return pos, player
-	return -1
+	return -1, player
 	
 
 # Defines how good a position is for a player
@@ -79,6 +78,3 @@ threes = [[0,1,2], [3,4,5], [6,7,8],
 	   [0,3,6], [1,4,7], [2,5,8], 
 	   [0,4,8], [2, 4, 6]]
 grid = [2, 2, 2, 1, 2, 1, 0, 0, 2]
-
-#print(sorted([grid[i] for i in [0,1,2]]))
-print(Solve([2, 1, 0, 0, 1, 2, 1, 2, 2]))

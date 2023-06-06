@@ -142,7 +142,7 @@ while True:
 		if (inner/outer > 0.02 and inner/outer < 0.2 and len(approx) < 7):
 			# Making sure is a square
 			_, _, w,h = cv2.boundingRect(approx)
-			if (w/h < 0.5 or h/w < 0.5):
+			if (w/h < 0.5 or h/w < 0.5 or w * h / x1 / y1 > 0.5):
 				continue
 			cv2.drawContours(warped, [approx], 0, (255, 255, 0), 3)
 			cv2.drawContours(warpedColor, [approx], 0, (255, 255, 0), 3)
@@ -201,6 +201,7 @@ while True:
 
 		# Drawing prediction
 		if savedPosition != -1:
+			#print(position, predictions)
 			currentContour = savedOriginals2[savedPosition]
 			M = cv2.moments(currentContour)
 			if M['m00'] != 0:
@@ -252,7 +253,7 @@ while True:
 
 
 	
-		cv2.imshow("Output3" ,warped2)
+		cv2.imshow("Output3" ,warpedColor)
 	
 	# TODO: draw the found contours onto the affected file
 			
