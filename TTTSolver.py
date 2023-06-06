@@ -1,3 +1,6 @@
+"""
+Relatively basic move recommendor for tic tac toe
+"""
 def Solve(grid):
 	threes = [[0,1,2], [3,4,5], [6,7,8], 
 	   [0,3,6], [1,4,7], [2,5,8], 
@@ -45,6 +48,22 @@ def Solve(grid):
 		gridcopy = grid.copy()
 		gridcopy[pos] = player
 		if FindMatches(gridcopy, [player, player, 2]) >= 2:
+			return pos, player
+	# denying forks
+	for pos in range(9):
+		# Test each possible move for forks
+		if grid[pos] != 2:
+			continue
+		gridcopy = grid.copy()
+		gridcopy[pos] = player
+		if FindMatches(gridcopy, [1-player, 1-player, 2]) >= 2:
+			return pos, player
+	# choosing closest to center
+	if grid[4] == 2:
+		return 4, player
+	# choosing random
+	for pos in range(9):
+		if grid[pos] == 2:
 			return pos, player
 	return -1, player
 	
