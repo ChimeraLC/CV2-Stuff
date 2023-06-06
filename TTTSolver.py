@@ -6,9 +6,9 @@ def Solve(grid):
 	difcount = 0
 	player = 0
 	for val in grid:
-		if (val == "o"):
+		if (val == 0):
 			difcount -=1
-		if (val == "x"):
+		if (val == 1):
 			difcount += 1
 	# x turn
 	if difcount == 0:
@@ -81,4 +81,4 @@ threes = [[0,1,2], [3,4,5], [6,7,8],
 grid = [2, 2, 2, 1, 2, 1, 0, 0, 2]
 
 #print(sorted([grid[i] for i in [0,1,2]]))
-#print(Solve([1, 0, 0, 2, 2, 1, 2, 2, 2]))
+print(Solve([2, 1, 0, 0, 1, 2, 1, 2, 2]))

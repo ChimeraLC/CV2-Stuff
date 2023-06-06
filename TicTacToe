@@ -235,8 +235,8 @@ while True:
 			dst1 = cv2.perspectiveTransform(pts1, h)
 
 			# Draw text onto image
-			cv2.putText(frame, (["o", "x"])[player], (int(dst1[0][0][0]), int(dst1[0][0][1]) - 10),
-					cv2.FONT_HERSHEY_SIMPLEX, 2, (0, 0, 0), 2)
+			cv2.putText(frame, (["o", "x"])[player], (int(dst1[0][0][0]), int(dst1[0][0][1])),
+					cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 0), 2)
 	
 	# Show final output
 	cv2.imshow("Output", frame) 
