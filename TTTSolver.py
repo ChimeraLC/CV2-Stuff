@@ -18,7 +18,7 @@ def Solve(grid):
 		player = 0
 	else:
 		print("Unviable board")
-		return -1
+		return -1, 0
 	
 	# calculating all the positions
 	"""
@@ -31,13 +31,13 @@ def Solve(grid):
 		if (sorted([grid[i] for i in t]) == [player, player, 2]):
 			for i in t:
 				if grid[i] == 2:
-					return i
+					return i, player
 	# preventing enemy wins
 	for t in threes:
 		if (sorted([grid[i] for i in t]) == [1-player, 1-player, 2]):
 			for i in t:
 				if grid[i] == 2:
-					return i
+					return i, player
 	# finding forks
 	for pos in range(9):
 		# Test each possible move for forks
@@ -46,7 +46,7 @@ def Solve(grid):
 		gridcopy = grid.copy()
 		gridcopy[pos] = player
 		if FindMatches(gridcopy, [player, player, 2]) >= 2:
-			return pos
+			return pos, player
 	return -1
 	
 

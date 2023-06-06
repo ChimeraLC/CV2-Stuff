@@ -46,6 +46,8 @@ def Resize(frame, approx, color = False):
 	warped = cv2.warpPerspective(frame, warpMethod, (x+10, y+10))
 	return warped
 
+
+
 # Finds the top left value
 def TopLeft(approx):
 	flattened = approx.ravel()
@@ -113,6 +115,7 @@ while True:
 			warped = Resize(thresh, approx)
 			warpedColor = Resize(frame, approx, True)
 			maxArea = area
+			originalContour = approx
 
 	# fixing broken lines
 	kernel = np.ones((3, 3), np.uint8)  # note this is a horizontal kernel
@@ -151,6 +154,7 @@ while True:
 		savedSquares = squares
 		savedOriginals = copy.deepcopy(originals)
 		savedOriginals2 = copy.deepcopy(originals)
+		savedOriginalContour = originalContour
 		saved = warpedColor
 		found = True
 		shrunk = False
@@ -191,7 +195,7 @@ while True:
 			if (np.mean(alteredSquares[i]) > 250):
 				predictions[i] = 2
 
-		position = Solve(predictions)
+		position, player = Solve(predictions)
 		if (position != -1):
 			savedPosition = position
 
@@ -202,15 +206,58 @@ while True:
 			if M['m00'] != 0:
 				cx = int(M['m10']/M['m00'])
 				cy = int(M['m01']/M['m00'])
-				cv2.putText(warped2, str(savedPosition), (cx - 20, cy - 20),
+				cv2.putText(warped2, str(savedPosition), (cx, cy),
 						cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), 2)
+				
+				flattened = savedOriginalContour.ravel()
+				# Finding counterclockwise orientation
+				grid = [[flattened[0], flattened[1]], 
+					[flattened[0], flattened[1]],
+					[flattened[0], flattened[1]],
+					[flattened[0], flattened[1]]]
+				# Top left value
+				for i in range(int(len(flattened)/2)):
+					if (flattened[2*i] + flattened[2*i+1] < grid[0][0] + grid[0][1]):
+						grid[0][0] = flattened[2*i]
+						grid[0][1] = flattened[2*i+1]
+				# Bottom right value
+				for i in range(int(len(flattened)/2)):
+					if (flattened[2*i] + flattened[2*i+1] > grid[2][0] + grid[2][1]):
+						grid[2][0] = flattened[2*i]
+						grid[2][1] = flattened[2*i+1]
+
+				# Bottom Left value
+				for i in range(int(len(flattened)/2)):
+					if (flattened[2*i] - flattened[2*i+1] < grid[1][0] - grid[1][1]):
+						grid[1][0] = flattened[2*i]
+						grid[1][1] = flattened[2*i+1]
+
+						
+				# Top right value
+				for i in range(int(len(flattened)/2)):
+					if (flattened[2*i] - flattened[2*i+1] > grid[3][0] - grid[3][1]):
+						grid[3][0] = flattened[2*i]
+						grid[3][1] = flattened[2*i+1]
+		
+				mapGrid = np.array(grid, dtype="float32")
+				x, y = warped2.shape
+				warpGrid = np.array([[0, 0], [0, y], [x, y], [x, 0]], dtype="float32")
+
+				h, mask = cv2.findHomography(warpGrid, mapGrid)
+				pts = np.array([cx, cy], np.float32)
+				pts1 = pts.reshape(-1,1,2).astype(np.float32)
+				dst1 = cv2.perspectiveTransform(pts1, h)
+				cv2.putText(frame, (["o", "x"])[player], (int(dst1[0][0][0]), int(dst1[0][0][1])),
+						cv2.FONT_HERSHEY_SIMPLEX, 2, (0, 0, 0), 2)
+
+
 	
 		cv2.imshow("Output3" ,warped2)
 	
 	# TODO: draw the found contours onto the affected file
 			
 	# Show the final output
-	cv2.imshow("Output", thresh) 
+	cv2.imshow("Output", frame) 
 	if cv2.waitKey(1) == ord('q'):
 		break
 
