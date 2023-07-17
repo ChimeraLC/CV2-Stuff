@@ -2,6 +2,7 @@ import cv2
 import numpy as np
 import copy
 import tensorflow as tf
+import time
 from TTTSolver import *
 """
 Converts an approximated contour into a 
@@ -93,6 +94,7 @@ cap = cv2.VideoCapture(0)
 # Initial variables
 found = False
 savedPosition = -1
+lastTime = 0
 
 while True:
 	# Read each frame from the webcam
@@ -101,6 +103,9 @@ while True:
 	y, x, c = frame.shape
 
 	total_area = x * y
+
+	# Current frame time
+	currentTime = time.time()
 
 	# Flip the frame vertically
 	frame = cv2.flip(frame, 1)
@@ -166,6 +171,8 @@ while True:
 			# TODO: order the squares
 			squares.append(Resize(warped, approx))
 			originals.append(approx)
+			# Time since found
+			lastTime = time.time()
 
 	# If the found contour has specifically 9 inner squares
 	if (len(squares) == 9):
@@ -223,8 +230,8 @@ while True:
 			#Indicate that a valid next move has been found
 			found = True
 
-	# If theres a valid 3x3 square, solve and display
-	if found:
+	# If theres a valid 3x3 square, solve and display if hasn't been too long
+	if found and currentTime - lastTime < 0.5:
 		# Find center of corresponding square
 		currentContour = savedOriginals[savedPosition]
 		flattened = FlattenSort(currentContour)
